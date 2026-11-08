@@ -47,29 +47,29 @@ window.registerUser = function(email, password) {
 };
 
 // ==========================================
-// HÀM ĐĂNG NHẬP TOÀN CỤC
+// HÀM ĐĂNG NHẬP (ĐÃ KHỚP ID MỚI ĐỂ CHẶN TỰ ĐIỀN)
 // ==========================================
 window.loginUser = function() {
-  const emailInput = document.getElementById('loginEmail');
-  const passwordInput = document.getElementById('loginPassword');
+  const emailInput = document.getElementById('loginUserX');
+  const passwordInput = document.getElementById('loginPassX');
   
   const email = emailInput ? emailInput.value.trim() : '';
   const password = passwordInput ? passwordInput.value.trim() : '';
 
   if (!email || !password) {
-    alert("Vui lòng nhập đầy đủ email và mật khẩu!");
+    alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
     return;
   }
 
-  // Cho phép đăng nhập nhanh bằng tài khoản mẫu của dự án
-  if (email === 'admin@vtoedulab.com' && password === '123456') {
+  // Kiểm tra tài khoản và mật khẩu hệ thống
+  if (email === 'Hoangngan@123' && password === 'Hoangngan123') {
     alert("🎉 Đăng nhập thành công! Chào mừng cô Hoàng Ngân.");
     localStorage.setItem("vto_logged_in", "true");
     checkAccessControl();
     return;
   }
 
-  // Xác thực Firebase thông thường
+  // Chế độ dự phòng Firebase hoặc Demo
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       alert("Đăng nhập thành công! Chào mừng: " + userCredential.user.email);
@@ -77,9 +77,7 @@ window.loginUser = function() {
       checkAccessControl();
     })
     .catch((error) => {
-      alert("⚠️ Đăng nhập thành công chế độ Demo (Tài khoản cục bộ)!");
-      localStorage.setItem("vto_logged_in", "true");
-      checkAccessControl();
+      alert("❌ Sai tài khoản hoặc mật khẩu hệ thống!");
     });
 };
 

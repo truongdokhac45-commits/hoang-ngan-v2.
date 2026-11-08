@@ -45,7 +45,6 @@
                     <span>VTO EDULAB</span> / <strong>Tổng quan</strong>
                 </div>
                 <div class="user-profile" style="display: flex; align-items: center; gap: 15px;">
-                    <!-- Đã bỏ nút bấm mở modal thủ công ở đây để bắt buộc đăng nhập từ đầu -->
                     <i class="fa-regular fa-bell"></i>
                     <div class="avatar">HN</div>
                     <div class="user-info">
@@ -290,7 +289,7 @@
     <!-- SCRIPT MODULE -->
     <script type="module" src="script.js"></script>
 
-    <!-- KHUNG ĐĂNG NHẬP / XÁC THỰC FIREBASE (Hiển thị mặc định ban đầu) -->
+    <!-- KHUNG ĐĂNG NHẬP -->
     <div id="loginModal" class="modal-overlay" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 9999; justify-content: center; align-items: center;">
         <div class="modal-box" style="background: #fff; padding: 30px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
             <div class="modal-header" style="margin-bottom: 20px; text-align: center;">
@@ -300,13 +299,15 @@
             
             <div class="modal-body">
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display: block; font-weight: 500; margin-bottom: 5px; font-size: 14px;">Email giáo viên:</label>
-                    <input type="email" id="loginEmail" placeholder="admin@vtoedulab.com" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
+                    <label style="display: block; font-weight: 500; margin-bottom: 5px; font-size: 14px;">Tài khoản đăng nhập:</label>
+                    <!-- Đổi id thành loginUserX và autocomplete="nope" -->
+                    <input type="text" id="loginUserX" placeholder="Nhập tài khoản..." autocomplete="nope" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
                 </div>
                 
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 5px; font-size: 14px;">Mật khẩu:</label>
-                    <input type="password" id="loginPassword" placeholder="123456" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
+                    <!-- Đổi id thành loginPassX và autocomplete="new-password" -->
+                    <input type="password" id="loginPassX" placeholder="Nhập mật khẩu..." autocomplete="new-password" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
                 </div>
             </div>
 
@@ -317,5 +318,3 @@
             </div>
         </div>
     </div>
-</body>
-</html>
