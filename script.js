@@ -47,7 +47,7 @@ window.registerUser = function(email, password) {
 };
 
 // ==========================================
-// HÀM ĐĂNG NHẬP (ĐÃ KHỚP ID MỚI ĐỂ CHẶN TỰ ĐIỀN)
+// HÀM ĐĂNG NHẬP HỆ THỐNG
 // ==========================================
 window.loginUser = function() {
   const emailInput = document.getElementById('loginUserX');
@@ -61,7 +61,7 @@ window.loginUser = function() {
     return;
   }
 
-  // Kiểm tra tài khoản và mật khẩu hệ thống
+  // Kiểm tra tài khoản và mật khẩu mới của hệ thống
   if (email === 'Hoangngan@123' && password === 'Hoangngan123') {
     alert("🎉 Đăng nhập thành công! Chào mừng cô Hoàng Ngân.");
     localStorage.setItem("vto_logged_in", "true");
@@ -69,7 +69,7 @@ window.loginUser = function() {
     return;
   }
 
-  // Chế độ dự phòng Firebase hoặc Demo
+  // Chế độ dự phòng Firebase
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       alert("Đăng nhập thành công! Chào mừng: " + userCredential.user.email);
@@ -79,6 +79,31 @@ window.loginUser = function() {
     .catch((error) => {
       alert("❌ Sai tài khoản hoặc mật khẩu hệ thống!");
     });
+};
+
+// ==========================================
+// HÀM ĐĂNG XUẤT KHỎI HỆ THỐNG
+// ==========================================
+window.logoutUser = function() {
+  const confirmLogout = confirm("🚪 Bạn có chắc chắn muốn đăng xuất khỏi hệ thống VTO EDULAB không?");
+  if (confirmLogout) {
+    localStorage.removeItem("vto_logged_in");
+    
+    if (typeof signOut === 'function' && auth) {
+      signOut(auth).catch((error) => {
+        console.log("Lỗi đăng xuất firebase: ", error);
+      });
+    }
+
+    alert("👋 Đã đăng xuất thành công!");
+    checkAccessControl();
+    
+    // Xóa trắng ô input đăng nhập
+    const emailInput = document.getElementById('loginUserX');
+    const passwordInput = document.getElementById('loginPassX');
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+  }
 };
 
 // ==========================================
