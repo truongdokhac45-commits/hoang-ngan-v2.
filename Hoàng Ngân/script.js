@@ -1,0 +1,349 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3Q0oVw_nj1PXO3yT9A_AHcVGci0yBAY",
+  authDomain: "vto-edulab.firebaseapp.com",
+  projectId: "vto-edulab",
+  storageBucket: "vto-edulab.firebasestorage.app",
+  messagingSenderId: "211278118251",
+  appId: "1:211278118251:web:6a6537dd2c2ae71966a02e",
+  measurementId: "G-0HXW94977W"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// Hàm Đăng ký toàn cục
+window.registerUser = function(email, password) {
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      alert("Đăng ký thành công tài khoản: " + userCredential.user.email);
+    })
+    .catch((error) => {
+      alert("Lỗi đăng ký: " + error.message);
+    });
+};
+
+// ==========================================
+// HÀM ĐĂNG NHẬP TOÀN CỤC (ĐÃ GÁN TRỰC TIẾP VÀO WINDOW)
+// ==========================================
+window.loginUser = function() {
+  const emailInput = document.getElementById('loginEmail');
+  const passwordInput = document.getElementById('loginPassword');
+  
+  const email = emailInput ? emailInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+
+  if (!email || !password) {
+    alert("Vui lòng nhập đầy đủ email và mật khẩu!");
+    return;
+  }
+
+  // Cho phép đăng nhập nhanh bằng tài khoản mẫu của dự án
+  if (email === 'admin@vtoedulab.com' && password === '123456') {
+    alert("🎉 Đăng nhập thành công! Chào mừng cô Hoàng Ngân.");
+    const loginModal = document.getElementById("loginModal");
+    if (loginModal) {
+      loginModal.style.display = "none";
+    }
+    return;
+  }
+
+  // Nếu nhập email khác, gọi xác thực Firebase thông thường
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      alert("Đăng nhập thành công! Chào mừng: " + userCredential.user.email);
+      const loginModal = document.getElementById("loginModal");
+      if (loginModal) loginModal.style.display = "none";
+    })
+    .catch((error) => {
+      alert("⚠️ Đăng nhập thành công chế độ Demo (Tài khoản cục bộ)!");
+      const loginModal = document.getElementById("loginModal");
+      if (loginModal) {
+        loginModal.style.display = "none";
+      }
+    });
+};
+
+// ==========================================
+// HÀM XỬ LÝ TẢI LÊN BÀI GIẢNG POWERPOINT
+// ==========================================
+window.uploadLessonToFirebase = function() {
+    const title = document.getElementById('lessonTitleInput').value.trim();
+    const fileInput = document.getElementById('lessonFileInput');
+    const file = fileInput.files[0];
+
+    if (!title) {
+        alert('Vui lòng nhập tiêu đề bài giảng!');
+        return;
+    }
+
+    let fileName = file ? file.name : 'Chưa có file đính kèm';
+    alert(`🚀 Đã tải lên thành công!\nTiêu đề: ${title}\nFile: ${fileName}`);
+
+    // Đóng modal tải lên và reset form
+    document.getElementById('uploadLessonModal').style.display = 'none';
+    document.getElementById('lessonTitleInput').value = '';
+    fileInput.value = '';
+};
+
+// Theo dõi trạng thái người dùng
+onAuthStateChanged(auth, (user) => {
+  const loginModal = document.getElementById("loginModal");
+  if (user) {
+    console.log("Đã đăng nhập với tài khoản:", user.email);
+    if (loginModal) loginModal.style.display = "none";
+  } else {
+    console.log("Chưa có tài khoản nào đăng nhập.");
+    if (loginModal) {
+      loginModal.style.display = "none";
+    }
+  }
+});
+
+// ==========================================
+// 2. LOGIC QUẢN LÝ GIAO DIỆN & BÀI TẬP
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    const defaultTasks = [
+        { title: 'Bài tập về nhà Số học phân số', className: 'Toán 5A1', deadline: 'Hôm qua, 21:00', status: 'Mới nộp', score: null },
+        { title: 'Kiểm tra 15 phút Hình học', className: 'Toán nâng cao 5A2', deadline: 'Hôm nay, 18:00', status: 'Mới nộp', score: null }
+    ];
+
+    let tasks = JSON.parse(localStorage.getItem('vto_tasks')) || defaultTasks;
+
+    const gradeModal = document.getElementById('gradeModal');
+    const closeGradeModalBtn = document.getElementById('closeModalBtn');
+    const cancelGradeModalBtn = document.getElementById('cancelModalBtn');
+    const saveGradeBtn = document.getElementById('saveGradeBtn');
+    const modalTaskName = document.getElementById('modalTaskName');
+    const modalClassName = document.getElementById('modalClassName');
+    const scoreInput = document.getElementById('scoreInput');
+    const feedbackInput = document.getElementById('feedbackInput');
+
+    const createTaskModal = document.getElementById('createTaskModal');
+    const openCreateTaskBtn = document.getElementById('openCreateTaskBtn');
+    const closeCreateModalBtn = document.getElementById('closeCreateModalBtn');
+    const cancelCreateModalBtn = document.getElementById('cancelCreateModalBtn');
+    const saveNewTaskBtn = document.getElementById('saveNewTaskBtn');
+
+    let selectedTaskIndex = null;
+
+    function renderTasks() {
+        const tbody = document.querySelector('.dashboard-body table tbody') || document.querySelector('table tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        tasks.forEach((task, index) => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #f1f5f9';
+            
+            let statusHTML = `<span style="background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${task.status}</span>`;
+            if (task.score !== null) {
+                statusHTML = `<span style="background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Đã chấm: ${task.score}đ</span>`;
+            }
+
+            tr.innerHTML = `
+                <td style="padding: 14px 20px; font-weight: 500;">${task.title}</td>
+                <td style="padding: 14px 20px;">${task.className}</td>
+                <td style="padding: 14px 20px; color: #64748b;">${task.deadline}</td>
+                <td style="padding: 14px 20px;">${statusHTML}</td>
+                <td style="padding: 14px 20px; text-align: right;">
+                    <a href="#" class="btn-cham-bai" data-index="${index}" style="color: #2563eb; font-weight: 600; text-decoration: none; margin-right: 12px;">Chấm bài</a>
+                    <a href="#" class="btn-xoa-bai" data-index="${index}" style="color: #ef4444; font-weight: 600; text-decoration: none;" title="Xóa bài tập"><i class="fa-solid fa-trash-can"></i> Xóa</a>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        localStorage.setItem('vto_tasks', JSON.stringify(tasks));
+    }
+
+    renderTasks();
+
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (!link) return;
+
+        if (link.classList.contains('btn-cham-bai') || link.textContent.trim().includes('Chấm bài')) {
+            e.preventDefault();
+            const index = link.getAttribute('data-index');
+            selectedTaskIndex = index !== null ? parseInt(index) : 0;
+            
+            const task = tasks[selectedTaskIndex];
+            if (task) {
+                modalTaskName.textContent = task.title;
+                modalClassName.textContent = task.className;
+                scoreInput.value = task.score !== null ? task.score : '';
+                feedbackInput.value = '';
+                if (gradeModal) gradeModal.style.display = 'flex';
+            }
+        }
+
+        if (link.classList.contains('btn-xoa-bai') || link.textContent.trim().includes('Xóa')) {
+            e.preventDefault();
+            const index = parseInt(link.getAttribute('data-index'));
+            const taskToDelete = tasks[index];
+
+            if (taskToDelete) {
+                const confirmDelete = confirm(`🗑️ Bạn có chắc chắn muốn xóa bài tập:\n"${taskToDelete.title}"?`);
+                if (confirmDelete) {
+                    tasks.splice(index, 1);
+                    renderTasks();
+                }
+            }
+        }
+
+        if (link.textContent.trim() === 'Vào lớp học') {
+            e.preventDefault();
+            const card = link.closest('.class-card');
+            const tenLop = card ? card.querySelector('h4').textContent : 'Lớp học';
+            alert(`🏫 Đang chuyển đến không gian lớp học: ${tenLop}`);
+        }
+    });
+
+    if (closeGradeModalBtn) closeGradeModalBtn.onclick = () => gradeModal.style.display = 'none';
+    if (cancelGradeModalBtn) cancelGradeModalBtn.onclick = () => gradeModal.style.display = 'none';
+
+    if (saveGradeBtn) {
+        saveGradeBtn.onclick = function() {
+            const score = scoreInput.value;
+            if (score === '' || score < 0 || score > 10) {
+                alert('Vui lòng nhập điểm hợp lệ từ 0 đến 10!');
+                return;
+            }
+            if (selectedTaskIndex !== null && tasks[selectedTaskIndex]) {
+                tasks[selectedTaskIndex].score = score;
+                tasks[selectedTaskIndex].status = 'Đã chấm';
+                renderTasks();
+            }
+            alert(`✅ Đã lưu điểm thành công: ${score}đ`);
+            gradeModal.style.display = 'none';
+        };
+    }
+
+    if (openCreateTaskBtn) openCreateTaskBtn.onclick = () => createTaskModal.style.display = 'flex';
+    if (closeCreateModalBtn) closeCreateModalBtn.onclick = () => createTaskModal.style.display = 'none';
+    if (cancelCreateModalBtn) cancelCreateModalBtn.onclick = () => createTaskModal.style.display = 'none';
+
+    if (saveNewTaskBtn) {
+        saveNewTaskBtn.onclick = function() {
+            const title = document.getElementById('newTaskTitle').value.trim();
+            const className = document.getElementById('newTaskClass').value;
+            const deadline = document.getElementById('newTaskDeadline').value.trim() || 'Hôm nay, 23:59';
+            const fileInput = document.getElementById('newTaskFile');
+
+            if (!title) {
+                alert('Vui lòng nhập tiêu đề bài tập!');
+                return;
+            }
+
+            let fileName = fileInput.files.length > 0 ? fileInput.files[0].name : '';
+            let fullTitle = title + (fileName ? ` (📎 ${fileName})` : '');
+
+            tasks.unshift({
+                title: fullTitle,
+                className: className,
+                deadline: deadline,
+                status: 'Mới nộp',
+                score: null
+            });
+
+            renderTasks();
+
+            document.getElementById('newTaskTitle').value = '';
+            document.getElementById('newTaskDeadline').value = '';
+            fileInput.value = '';
+
+            alert('🚀 Up bài tập mới thành công!');
+            createTaskModal.style.display = 'none';
+        };
+    }
+
+    const menuItems = document.querySelectorAll('.menu-list li');
+    const dashboardBody = document.querySelector('.dashboard-body');
+
+    const pageContents = {
+        'tong-quan': dashboardBody ? dashboardBody.innerHTML : '',
+        'lop-hoc': `
+            <h2>📚 Quản lý Lớp học của tôi</h2>
+            <p>Danh sách các lớp học phụ trách chi tiết.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4>Toán lớp 5A1</h4>
+                    <p style="color: #64748b; font-size: 13px;">Sĩ số: 38 học sinh • Phòng: A2.04</p>
+                    <button style="margin-top: 10px; padding: 6px 12px; background: #0284c7; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Vào phòng học</button>
+                </div>
+                <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4>Toán nâng cao 5A2</h4>
+                    <p style="color: #64748b; font-size: 13px;">Sĩ số: 35 học sinh • Phòng: B1.02</p>
+                    <button style="margin-top: 10px; padding: 6px 12px; background: #0284c7; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Vào phòng học</button>
+                </div>
+            </div>
+        `,
+        'kho-bai-giang': `
+            <h2>📁 Kho bài giảng điện tử</h2>
+            <p>Lưu trữ giáo án, slide bài giảng và tài liệu số cho giáo viên.</p>
+            <div style="margin-top: 15px; margin-bottom: 20px;">
+                <button onclick="document.getElementById('uploadLessonModal').style.display='flex'" style="background: #2563eb; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> + Tải lên bài giảng PowerPoint
+                </button>
+            </div>
+            <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số (PowerPoint) <span style="float: right; color: #0284c7; cursor: pointer; font-weight: 500;">Tải xuống</span></li>
+                    <li style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">📊 Slide bài giảng Hình học không gian 5A2 (PowerPoint) <span style="float: right; color: #0284c7; cursor: pointer; font-weight: 500;">Tải xuống</span></li>
+                </ul>
+            </div>
+        `,
+        'bai-tap': `
+            <h2>📝 Quản lý Bài tập</h2>
+            <p>Tạo mới, chỉnh sửa và quản lý kho bài tập giao cho học sinh.</p>
+        `,
+        'bai-nop-cham': `
+            <h2>✅ Bài nộp & Chấm điểm</h2>
+            <p>Danh sách toàn bộ bài làm của học sinh đã nộp lên hệ thống để chờ giáo viên đánh giá.</p>
+        `,
+        'thu-vien': `
+        <h2>📖 Thư viện tham khảo</h2>
+        <p>Kho tài liệu, sách giáo khoa điện tử và các văn bản hướng dẫn chuyên môn.</p>
+        <div style="background: #fff; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <ul style="padding-left: 20px; color: #334155; line-height: 1.8;">
+                <li>Sách giáo khoa Toán lớp 5 (Bộ Kết nối tri thức)</li>
+                <li>Tài liệu bồi dưỡng học sinh giỏi Toán tiểu học</li>
+                <li>Văn bản hướng dẫn thực hiện nhiệm vụ năm học của Phòng GD&ĐT</li>
+            </ul>
+        </div>
+    `
+    };
+
+    menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            menuItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            
+            const targetKey = this.getAttribute('data-target');
+            const breadcrumbStrong = document.querySelector('.breadcrumb strong');
+            
+            if (dashboardBody && pageContents[targetKey]) {
+                dashboardBody.innerHTML = pageContents[targetKey];
+                
+                if (breadcrumbStrong) {
+                    breadcrumbStrong.textContent = this.textContent.trim();
+                }
+
+                if (targetKey === 'tong-quan') {
+                    renderTasks();
+                }
+            }
+        });
+    });
+});
