@@ -20,6 +20,27 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// Hàm kiểm soát hiển thị giao diện chính và modal đăng nhập
+function checkAccessControl() {
+  const loginModal = document.getElementById("loginModal");
+  const mainApp = document.querySelector(".app-container") || document.body;
+  const isLoggedIn = localStorage.getItem("vto_logged_in") === "true";
+
+  if (!isLoggedIn) {
+    // Chưa đăng nhập: Hiện bắt buộc modal đăng nhập, ẩn giao diện chính
+    if (loginModal) loginModal.style.display = "flex";
+    if (document.querySelector(".app-container")) {
+      document.querySelector(".app-container").style.display = "none";
+    }
+  } else {
+    // Đã đăng nhập: Ẩn modal đăng nhập, hiện giao diện chính
+    if (loginModal) loginModal.style.display = "none";
+    if (document.querySelector(".app-container")) {
+      document.querySelector(".app-container").style.display = "flex";
+    }
+  }
+}
+
 // Hàm Đăng ký toàn cục
 window.registerUser = function(email, password) {
   createUserWithEmailAndPassword(auth, email, password)
@@ -49,10 +70,8 @@ window.loginUser = function() {
   // Cho phép đăng nhập nhanh bằng tài khoản mẫu của dự án
   if (email === 'admin@vtoedulab.com' && password === '123456') {
     alert("🎉 Đăng nhập thành công! Chào mừng cô Hoàng Ngân.");
-    const loginModal = document.getElementById("loginModal");
-    if (loginModal) {
-      loginModal.style.display = "none";
-    }
+    localStorage.setItem("vto_logged_in", "true");
+    checkAccessControl();
     return;
   }
 
@@ -60,15 +79,13 @@ window.loginUser = function() {
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       alert("Đăng nhập thành công! Chào mừng: " + userCredential.user.email);
-      const loginModal = document.getElementById("loginModal");
-      if (loginModal) loginModal.style.display = "none";
+      localStorage.setItem("vto_logged_in", "true");
+      checkAccessControl();
     })
     .catch((error) => {
       alert("⚠️ Đăng nhập thành công chế độ Demo (Tài khoản cục bộ)!");
-      const loginModal = document.getElementById("loginModal");
-      if (loginModal) {
-        loginModal.style.display = "none";
-      }
+      localStorage.setItem("vto_logged_in", "true");
+      checkAccessControl();
     });
 };
 
@@ -96,22 +113,20 @@ window.uploadLessonToFirebase = function() {
 
 // Theo dõi trạng thái người dùng
 onAuthStateChanged(auth, (user) => {
-  const loginModal = document.getElementById("loginModal");
   if (user) {
     console.log("Đã đăng nhập với tài khoản:", user.email);
-    if (loginModal) loginModal.style.display = "none";
-  } else {
-    console.log("Chưa có tài khoản nào đăng nhập.");
-    if (loginModal) {
-      loginModal.style.display = "none";
-    }
+    localStorage.setItem("vto_logged_in", "true");
   }
+  checkAccessControl();
 });
 
 // ==========================================
 // 2. LOGIC QUẢN LÝ GIAO DIỆN & BÀI TẬP
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
+    // Kiểm tra quyền truy cập ngay khi tải trang
+    checkAccessControl();
+
     const defaultTasks = [
         { title: 'Bài tập về nhà Số học phân số', className: 'Toán 5A1', deadline: 'Hôm qua, 21:00', status: 'Mới nộp', score: null },
         { title: 'Kiểm tra 15 phút Hình học', className: 'Toán nâng cao 5A2', deadline: 'Hôm nay, 18:00', status: 'Mới nộp', score: null }
