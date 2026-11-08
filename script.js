@@ -84,7 +84,7 @@ window.loginUser = function() {
 };
 
 // ==========================================
-// HÀM XỬ LÝ TẢI LÊN BÀI GIẢNG POWERPOINT (ĐÃ CẬP NHẬT LƯU VÀ HIỂN THỊ)
+// HÀM XỬ LÝ TẢI LÊN BÀI GIẢNG POWERPOINT (CÁCH 2: LƯU FILE THỰC TẾ)
 // ==========================================
 window.uploadLessonToFirebase = function() {
     const title = document.getElementById('lessonTitleInput').value.trim();
@@ -96,50 +96,74 @@ window.uploadLessonToFirebase = function() {
         return;
     }
 
-    let fileName = file ? file.name : 'Tai_lieu_giang_day.pptx';
-    
-    // Lấy danh sách bài giảng hiện tại từ localStorage hoặc tạo danh sách mặc định
-    let savedLessons = JSON.parse(localStorage.getItem('vto_lessons')) || [
-        { title: '📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số (PowerPoint)' },
-        { title: '📊 Slide bài giảng Hình học không gian 5A2 (PowerPoint)' }
-    ];
-
-    // Thêm bài giảng mới lên đầu danh sách
-    savedLessons.unshift({ title: `📊 ${title} (${fileName})` });
-    
-    // Lưu lại vào bộ nhớ trình duyệt
-    localStorage.setItem('vto_lessons', JSON.stringify(savedLessons));
-
-    alert(`🚀 Đã tải lên và lưu thành công bài giảng:\n"${title}"`);
-
-    // Đóng modal tải lên và reset form
-    document.getElementById('uploadLessonModal').style.display = 'none';
-    document.getElementById('lessonTitleInput').value = '';
-    fileInput.value = '';
-
-    // Cập nhật lại giao diện danh sách kho bài giảng nếu đang mở
-    if (typeof renderLessonsList === 'function') {
-        renderLessonsList();
+    if (!file) {
+        alert('Vui lòng chọn file PowerPoint (.ppt, .pptx) cần tải lên!');
+        return;
     }
+
+    // Đọc file dưới dạng chuỗi dữ liệu (Base64) để có thể lưu và tải về lại
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fileDataUrl = e.target.result; // Dữ liệu file thực tế
+
+        let savedLessons = JSON.parse(localStorage.getItem('vto_lessons')) || [
+            { title: '📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số', fileName: 'toan_5a1.pptx', fileData: '' },
+            { title: '📊 Slide bài giảng Hình học không gian 5A2', fileName: 'hinh_5a2.pptx', fileData: '' }
+        ];
+
+        // Thêm bài giảng mới kèm theo dữ liệu file
+        savedLessons.unshift({
+            title: `📊 ${title}`,
+            fileName: file.name,
+            fileData: fileDataUrl
+        });
+
+        // Lưu vào localStorage
+        localStorage.setItem('vto_lessons', JSON.stringify(savedLessons));
+
+        alert(`🚀 Đã tải lên và lưu thành công bài giảng:\n"${title}"`);
+
+        // Đóng modal và reset form
+        document.getElementById('uploadLessonModal').style.display = 'none';
+        document.getElementById('lessonTitleInput').value = '';
+        fileInput.value = '';
+
+        // Cập nhật lại giao diện danh sách
+        if (typeof renderLessonsList === 'function') {
+            renderLessonsList();
+        }
+    };
+
+    reader.readAsDataURL(file);
 };
 
-// Hàm render danh sách bài giảng ra giao diện Kho bài giảng
+// Hàm render danh sách bài giảng ra giao diện Kho bài giảng và hỗ trợ Tải xuống
 function renderLessonsList() {
     const ulList = document.getElementById('lessonsUlList');
     if (!ulList) return;
 
     let savedLessons = JSON.parse(localStorage.getItem('vto_lessons')) || [
-        { title: '📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số (PowerPoint)' },
-        { title: '📊 Slide bài giảng Hình học không gian 5A2 (PowerPoint)' }
+        { title: '📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số', fileName: 'toan_5a1.pptx', fileData: '' },
+        { title: '📊 Slide bài giảng Hình học không gian 5A2', fileName: 'hinh_5a2.pptx', fileData: '' }
     ];
 
     ulList.innerHTML = '';
-    savedLessons.forEach((lesson) => {
+    savedLessons.forEach((lesson, index) => {
         const li = document.createElement('li');
         li.style.cssText = 'padding: 12px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;';
+        
+        let downloadBtnHTML = '';
+        if (lesson.fileData) {
+            // Nếu có dữ liệu thật, tạo thẻ a tải xuống tự động
+            downloadBtnHTML = `<a href="${lesson.fileData}" download="${lesson.fileName}" style="color: #0284c7; text-decoration: none; cursor: pointer; font-weight: 500;">Tải xuống</a>`;
+        } else {
+            // Dữ liệu mẫu ban đầu
+            downloadBtnHTML = `<span style="color: #94a3b8; font-size: 13px;">(File mẫu)</span>`;
+        }
+
         li.innerHTML = `
-            <span>${lesson.title}</span>
-            <span style="color: #0284c7; cursor: pointer; font-weight: 500;">Tải xuống</span>
+            <span>${lesson.title} <small style="color: #64748b;">(${lesson.fileName || 'PowerPoint'})</small></span>
+            ${downloadBtnHTML}
         `;
         ulList.appendChild(li);
     });
@@ -158,7 +182,6 @@ onAuthStateChanged(auth, (user) => {
 // 2. LOGIC QUẢN LÝ GIAO DIỆN & BÀI TẬP
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Kiểm tra quyền truy cập ngay khi tải trang
     checkAccessControl();
 
     const defaultTasks = [
@@ -392,7 +415,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     renderTasks();
                 }
 
-                // Nếu chuyển sang tab kho bài giảng, tự động load danh sách file lên
                 if (targetKey === 'kho-bai-giang') {
                     renderLessonsList();
                 }
