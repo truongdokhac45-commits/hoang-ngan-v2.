@@ -23,21 +23,15 @@ const auth = getAuth(app);
 // Hàm kiểm soát hiển thị giao diện chính và modal đăng nhập
 function checkAccessControl() {
   const loginModal = document.getElementById("loginModal");
-  const mainApp = document.querySelector(".app-container") || document.body;
+  const mainApp = document.querySelector(".app-container");
   const isLoggedIn = localStorage.getItem("vto_logged_in") === "true";
 
   if (!isLoggedIn) {
-    // Chưa đăng nhập: Hiện bắt buộc modal đăng nhập, ẩn giao diện chính
     if (loginModal) loginModal.style.display = "flex";
-    if (document.querySelector(".app-container")) {
-      document.querySelector(".app-container").style.display = "none";
-    }
+    if (mainApp) mainApp.style.display = "none";
   } else {
-    // Đã đăng nhập: Ẩn modal đăng nhập, hiện giao diện chính
     if (loginModal) loginModal.style.display = "none";
-    if (document.querySelector(".app-container")) {
-      document.querySelector(".app-container").style.display = "flex";
-    }
+    if (mainApp) mainApp.style.display = "flex";
   }
 }
 
@@ -53,7 +47,7 @@ window.registerUser = function(email, password) {
 };
 
 // ==========================================
-// HÀM ĐĂNG NHẬP TOÀN CỤC (ĐÃ GÁN TRỰC TIẾP VÀO WINDOW)
+// HÀM ĐĂNG NHẬP TOÀN CỤC
 // ==========================================
 window.loginUser = function() {
   const emailInput = document.getElementById('loginEmail');
@@ -75,7 +69,7 @@ window.loginUser = function() {
     return;
   }
 
-  // Nếu nhập email khác, gọi xác thực Firebase thông thường
+  // Xác thực Firebase thông thường
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       alert("Đăng nhập thành công! Chào mừng: " + userCredential.user.email);
@@ -90,7 +84,7 @@ window.loginUser = function() {
 };
 
 // ==========================================
-// HÀM XỬ LÝ TẢI LÊN BÀI GIẢNG POWERPOINT
+// HÀM XỬ LÝ TẢI LÊN BÀI GIẢNG POWERPOINT (ĐÃ CẬP NHẬT LƯU VÀ HIỂN THỊ)
 // ==========================================
 window.uploadLessonToFirebase = function() {
     const title = document.getElementById('lessonTitleInput').value.trim();
@@ -102,14 +96,54 @@ window.uploadLessonToFirebase = function() {
         return;
     }
 
-    let fileName = file ? file.name : 'Chưa có file đính kèm';
-    alert(`🚀 Đã tải lên thành công!\nTiêu đề: ${title}\nFile: ${fileName}`);
+    let fileName = file ? file.name : 'Tai_lieu_giang_day.pptx';
+    
+    // Lấy danh sách bài giảng hiện tại từ localStorage hoặc tạo danh sách mặc định
+    let savedLessons = JSON.parse(localStorage.getItem('vto_lessons')) || [
+        { title: '📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số (PowerPoint)' },
+        { title: '📊 Slide bài giảng Hình học không gian 5A2 (PowerPoint)' }
+    ];
+
+    // Thêm bài giảng mới lên đầu danh sách
+    savedLessons.unshift({ title: `📊 ${title} (${fileName})` });
+    
+    // Lưu lại vào bộ nhớ trình duyệt
+    localStorage.setItem('vto_lessons', JSON.stringify(savedLessons));
+
+    alert(`🚀 Đã tải lên và lưu thành công bài giảng:\n"${title}"`);
 
     // Đóng modal tải lên và reset form
     document.getElementById('uploadLessonModal').style.display = 'none';
     document.getElementById('lessonTitleInput').value = '';
     fileInput.value = '';
+
+    // Cập nhật lại giao diện danh sách kho bài giảng nếu đang mở
+    if (typeof renderLessonsList === 'function') {
+        renderLessonsList();
+    }
 };
+
+// Hàm render danh sách bài giảng ra giao diện Kho bài giảng
+function renderLessonsList() {
+    const ulList = document.getElementById('lessonsUlList');
+    if (!ulList) return;
+
+    let savedLessons = JSON.parse(localStorage.getItem('vto_lessons')) || [
+        { title: '📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số (PowerPoint)' },
+        { title: '📊 Slide bài giảng Hình học không gian 5A2 (PowerPoint)' }
+    ];
+
+    ulList.innerHTML = '';
+    savedLessons.forEach((lesson) => {
+        const li = document.createElement('li');
+        li.style.cssText = 'padding: 12px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;';
+        li.innerHTML = `
+            <span>${lesson.title}</span>
+            <span style="color: #0284c7; cursor: pointer; font-weight: 500;">Tải xuống</span>
+        `;
+        ulList.appendChild(li);
+    });
+}
 
 // Theo dõi trạng thái người dùng
 onAuthStateChanged(auth, (user) => {
@@ -311,9 +345,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </button>
             </div>
             <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                <ul style="list-style: none; padding: 0;">
-                    <li style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số (PowerPoint) <span style="float: right; color: #0284c7; cursor: pointer; font-weight: 500;">Tải xuống</span></li>
-                    <li style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">📊 Slide bài giảng Hình học không gian 5A2 (PowerPoint) <span style="float: right; color: #0284c7; cursor: pointer; font-weight: 500;">Tải xuống</span></li>
+                <ul id="lessonsUlList" style="list-style: none; padding: 0;">
+                    <!-- Danh sách bài giảng sẽ được load tự động tại đây -->
                 </ul>
             </div>
         `,
@@ -357,6 +390,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (targetKey === 'tong-quan') {
                     renderTasks();
+                }
+
+                // Nếu chuyển sang tab kho bài giảng, tự động load danh sách file lên
+                if (targetKey === 'kho-bai-giang') {
+                    renderLessonsList();
                 }
             }
         });
