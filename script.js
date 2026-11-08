@@ -84,7 +84,7 @@ window.loginUser = function() {
 };
 
 // ==========================================
-// HÀM XỬ LÝ TẢI LÊN BÀI GIẢNG POWERPOINT (CÁCH 2: LƯU FILE THỰC TẾ)
+// HÀM XỬ LÝ TẢI LÊN BÀI GIẢNG POWERPOINT
 // ==========================================
 window.uploadLessonToFirebase = function() {
     const title = document.getElementById('lessonTitleInput').value.trim();
@@ -101,37 +101,30 @@ window.uploadLessonToFirebase = function() {
         return;
     }
 
-    // Đọc file dưới dạng chuỗi dữ liệu (Base64) để có thể lưu và tải về lại
     const reader = new FileReader();
     reader.onload = function(e) {
-        const fileDataUrl = e.target.result; // Dữ liệu file thực tế
+        const fileDataUrl = e.target.result;
 
         let savedLessons = JSON.parse(localStorage.getItem('vto_lessons')) || [
             { title: '📊 Slide bài giảng Toán lớp 5A1 - Phép cộng phân số', fileName: 'toan_5a1.pptx', fileData: '' },
             { title: '📊 Slide bài giảng Hình học không gian 5A2', fileName: 'hinh_5a2.pptx', fileData: '' }
         ];
 
-        // Thêm bài giảng mới kèm theo dữ liệu file
         savedLessons.unshift({
             title: `📊 ${title}`,
             fileName: file.name,
             fileData: fileDataUrl
         });
 
-        // Lưu vào localStorage
         localStorage.setItem('vto_lessons', JSON.stringify(savedLessons));
 
         alert(`🚀 Đã tải lên và lưu thành công bài giảng:\n"${title}"`);
 
-        // Đóng modal và reset form
         document.getElementById('uploadLessonModal').style.display = 'none';
         document.getElementById('lessonTitleInput').value = '';
         fileInput.value = '';
 
-        // Cập nhật lại giao diện danh sách
-        if (typeof renderLessonsList === 'function') {
-            renderLessonsList();
-        }
+        renderLessonsList();
     };
 
     reader.readAsDataURL(file);
@@ -148,16 +141,14 @@ function renderLessonsList() {
     ];
 
     ulList.innerHTML = '';
-    savedLessons.forEach((lesson, index) => {
+    savedLessons.forEach((lesson) => {
         const li = document.createElement('li');
         li.style.cssText = 'padding: 12px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;';
         
         let downloadBtnHTML = '';
         if (lesson.fileData) {
-            // Nếu có dữ liệu thật, tạo thẻ a tải xuống tự động
             downloadBtnHTML = `<a href="${lesson.fileData}" download="${lesson.fileName}" style="color: #0284c7; text-decoration: none; cursor: pointer; font-weight: 500;">Tải xuống</a>`;
         } else {
-            // Dữ liệu mẫu ban đầu
             downloadBtnHTML = `<span style="color: #94a3b8; font-size: 13px;">(File mẫu)</span>`;
         }
 
@@ -183,6 +174,7 @@ onAuthStateChanged(auth, (user) => {
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
     checkAccessControl();
+    renderLessonsList();
 
     const defaultTasks = [
         { title: 'Bài tập về nhà Số học phân số', className: 'Toán 5A1', deadline: 'Hôm qua, 21:00', status: 'Mới nộp', score: null },
