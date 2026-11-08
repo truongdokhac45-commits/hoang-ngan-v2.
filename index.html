@@ -302,14 +302,18 @@
             </div>
             
             <div class="modal-body">
+                <!-- Thêm 2 ô input ẩn để lừa trình duyệt tự điền vào đây -->
+                <input type="text" name="fake_user" style="display:none;" autocomplete="username">
+                <input type="password" name="fake_pass" style="display:none;" autocomplete="current-password">
+
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 5px; font-size: 14px;">Tài khoản đăng nhập:</label>
-                    <input type="text" id="loginUserX" placeholder="Hoangngan@123" autocomplete="nope" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
+                    <input type="text" id="loginUserX" placeholder="Nhập tài khoản của bạn..." autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
                 </div>
                 
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: 500; margin-bottom: 5px; font-size: 14px;">Mật khẩu:</label>
-                    <input type="password" id="loginPassX" placeholder="Hoangngan123" autocomplete="new-password" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
+                    <input type="password" id="loginPassX" placeholder="Nhập mật khẩu..." autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
                 </div>
             </div>
 
