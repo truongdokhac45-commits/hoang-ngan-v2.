@@ -61,9 +61,9 @@ window.loginUser = function() {
     return;
   }
 
-  // Kiểm tra tài khoản và mật khẩu mới của hệ thống
-  if (email === 'Hoangngan@123' && password === 'Hoangngan123') {
-    alert("🎉 Đăng nhập thành công! Chào mừng cô Hoàng Ngân.");
+  // Kiểm tra tài khoản và mật khẩu mới của cô Lê Ngọc
+  if (email === 'Lengoc@123' && password === 'Lengoc123') {
+    alert("🎉 Đăng nhập thành công! Chào mừng cô Lê Ngọc.");
     localStorage.setItem("vto_logged_in", "true");
     checkAccessControl();
     return;
